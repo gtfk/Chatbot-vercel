@@ -1,11 +1,12 @@
 streamlit
-langchain-core
 langchain
 langchain-community
 langchain_groq
 langchain_text_splitters
-langchain-huggingface
 pypdf
-faiss-cpu # <-- CAMBIO AQUÍ
+faiss-cpu
 rank_bm25
 supabase
+# --- NUEVAS LIBRERÍAS LIGERAS ---
+fastembed
+langchain-fastembed

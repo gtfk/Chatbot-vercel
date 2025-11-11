@@ -1,29 +1,28 @@
-# Versión 7.1 - Cambiando Chroma por FAISS (más ligero)
+# Versión 7.2 - Arquitectura Ligera (FAISS + FastEmbed)
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceInferenceAPIEmbeddings
-from langchain_community.vectorstores import FAISS # <-- CAMBIO DE IMPORTACIÓN
+from langchain_community.vectorstores import FAISS
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers.ensemble import EnsembleRetriever
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_fastembed import FastEmbedEmbeddings # <-- CAMBIO DE IMPORTACIÓN
 import os
 from supabase import create_client, Client
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Chatbot Académico Duoc UC", page_icon="🤖", layout="wide")
 
-# --- CARGA DE CLAVES DE API ---
+# --- CARGA DE CLAVES DE API (SOLO GROQ Y SUPABASE) ---
 GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
 SUPABASE_URL = st.secrets.get("SUPABASE_URL")
 SUPABASE_KEY = st.secrets.get("SUPABASE_KEY")
-HUGGINGFACEHUB_API_TOKEN = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
 
-if not GROQ_API_KEY or not SUPABASE_URL or not SUPABASE_KEY or not HUGGINGFACEHUB_API_TOKEN:
-    st.error("Una o más claves de API no están configuradas. Por favor, revísalas en los Secrets.")
+if not GROQ_API_KEY or not SUPABASE_URL or not SUPABASE_KEY:
+    st.error("Una o más claves de API (Groq, Supabase) no están configuradas. Por favor, revísalas en los Secrets.")
     st.stop()
 
 # --- INICIALIZAR EL CLIENTE DE SUPABASE ---
@@ -40,15 +39,11 @@ def inicializar_cadena():
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
     docs = loader.load_and_split(text_splitter=text_splitter)
     
-    embeddings = HuggingFaceInferenceAPIEmbeddings(
-        api_key=HUGGINGFACEHUB_API_TOKEN,
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    )
-    
-    # --- CAMBIO CLAVE: USAMOS FAISS EN LUGAR DE CHROMA ---
-    vector_store = FAISS.from_documents(docs, embeddings)
+    # --- CAMBIO CLAVE: USAMOS EMBEDDINGS LIGEROS (FASTENBED) ---
+    embeddings = FastEmbedEmbeddings()
     # --- FIN DEL CAMBIO ---
     
+    vector_store = FAISS.from_documents(docs, embeddings)
     vector_retriever = vector_store.as_retriever(search_kwargs={"k": 7})
     
     doc_texts = [doc.page_content for doc in docs]
