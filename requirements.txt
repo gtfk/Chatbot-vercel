@@ -4,9 +4,8 @@ langchain
 langchain-community
 langchain_groq
 langchain_text_splitters
-langchain-experimental
+langchain-huggingface  # <-- Esta la usaremos para la API de embeddings
 pypdf
 chromadb
-sentence-transformers
 rank_bm25
 supabase
