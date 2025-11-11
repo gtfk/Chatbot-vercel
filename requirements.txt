@@ -6,6 +6,6 @@ langchain_groq
 langchain_text_splitters
 langchain-huggingface
 pypdf
-chromadb
+faiss-cpu # <-- CAMBIO AQUÍ
 rank_bm25
 supabase

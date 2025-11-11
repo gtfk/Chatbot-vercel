@@ -1,10 +1,10 @@
-# Versión 7.0 - Arquitectura Serverless (Embeddings por API)
+# Versión 7.1 - Cambiando Chroma por FAISS (más ligero)
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceInferenceAPIEmbeddings # <-- CAMBIO DE IMPORTACIÓN
-from langchain_community.vectorstores import Chroma
+from langchain_huggingface import HuggingFaceInferenceAPIEmbeddings
+from langchain_community.vectorstores import FAISS # <-- CAMBIO DE IMPORTACIÓN
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers.ensemble import EnsembleRetriever
 from langchain.chains import create_retrieval_chain
@@ -20,7 +20,7 @@ st.set_page_config(page_title="Chatbot Académico Duoc UC", page_icon="🤖", la
 GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
 SUPABASE_URL = st.secrets.get("SUPABASE_URL")
 SUPABASE_KEY = st.secrets.get("SUPABASE_KEY")
-HUGGINGFACEHUB_API_TOKEN = st.secrets.get("HUGGINGFACEHUB_API_TOKEN") # <-- CARGAMOS LA CLAVE DE HF
+HUGGINGFACEHUB_API_TOKEN = st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
 
 if not GROQ_API_KEY or not SUPABASE_URL or not SUPABASE_KEY or not HUGGINGFACEHUB_API_TOKEN:
     st.error("Una o más claves de API no están configuradas. Por favor, revísalas en los Secrets.")
@@ -40,14 +40,15 @@ def inicializar_cadena():
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
     docs = loader.load_and_split(text_splitter=text_splitter)
     
-    # --- CAMBIO CLAVE: USAMOS EMBEDDINGS POR API ---
     embeddings = HuggingFaceInferenceAPIEmbeddings(
         api_key=HUGGINGFACEHUB_API_TOKEN,
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
+    
+    # --- CAMBIO CLAVE: USAMOS FAISS EN LUGAR DE CHROMA ---
+    vector_store = FAISS.from_documents(docs, embeddings)
     # --- FIN DEL CAMBIO ---
     
-    vector_store = Chroma.from_documents(docs, embeddings)
     vector_retriever = vector_store.as_retriever(search_kwargs={"k": 7})
     
     doc_texts = [doc.page_content for doc in docs]
