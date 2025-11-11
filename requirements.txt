@@ -1,0 +1,12 @@
+streamlit
+langchain-core
+langchain
+langchain-community
+langchain_groq
+langchain_text_splitters
+langchain-experimental
+pypdf
+chromadb
+sentence-transformers
+rank_bm25
+supabase
